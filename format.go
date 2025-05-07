@@ -75,8 +75,14 @@ func getFirstRune(s string) rune {
 	return r
 }
 
+func getLastRune(s string) rune {
+	r, _ := utf8.DecodeLastRuneInString(s)
+	return r
+}
+
 func hasSingleTextChild(n *html.Node) bool {
-	return n != nil && n.FirstChild != nil && n.FirstChild == n.LastChild && n.FirstChild.Type == html.TextNode
+	return n != nil && n.FirstChild != nil && n.FirstChild == n.LastChild &&
+		n.FirstChild.Type == html.TextNode
 }
 
 func printNode(w io.Writer, n *html.Node, pre bool, level int) (err error) {
@@ -121,7 +127,8 @@ func printNode(w io.Writer, n *html.Node, pre bool, level int) (err error) {
 				if _, err = fmt.Fprint(w, s); err != nil {
 					return
 				}
-				if !hasSingleTextChild(n.Parent) {
+				if !hasSingleTextChild(n.Parent) &&
+					(n.NextSibling == nil || !unicode.IsPunct(getLastRune(strings.TrimSpace(s)))) {
 					if _, err = fmt.Fprint(w, "\n"); err != nil {
 						return
 					}
@@ -129,8 +136,11 @@ func printNode(w io.Writer, n *html.Node, pre bool, level int) (err error) {
 			}
 		}
 	case html.ElementNode:
-		if err = printIndent(w, level); err != nil {
-			return
+		if n.PrevSibling == nil ||
+			(n.PrevSibling.Type != html.TextNode || !unicode.IsPunct(getLastRune(strings.TrimSpace(n.PrevSibling.Data)))) {
+			if err = printIndent(w, level); err != nil {
+				return
+			}
 		}
 		if _, err = fmt.Fprintf(w, "<%s", n.Data); err != nil {
 			return

@@ -85,6 +85,14 @@ body {
 </style>
 `,
 		},
+		{
+			name:  "spaces are not added around elements ending with punctuation",
+			input: "<div><time>19:00</time>–<time>20:00</time></div>",
+			expected: `<div>
+ <time>19:00</time>–<time>20:00</time>
+</div>
+`,
+		},
 	}
 
 	for _, test := range tests {
