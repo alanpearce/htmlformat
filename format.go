@@ -55,6 +55,20 @@ func isVoidElement(n *html.Node) bool {
 	return false
 }
 
+func isInlineElement(n *html.Node) bool {
+	switch n.DataAtom {
+	case atom.B, atom.I, atom.U, atom.S,
+		atom.A, atom.Br, atom.Code, atom.Em, atom.Time,
+		atom.Span, atom.Strong, atom.Small, atom.Mark, atom.Del,
+		atom.Ins, atom.Sub, atom.Sup, atom.Q, atom.Cite,
+		atom.Dfn, atom.Abbr, atom.Data, atom.Var, atom.Samp,
+		atom.Kbd, atom.Label, atom.Button, atom.Select, atom.Textarea,
+		atom.Img, atom.Map, atom.Object, atom.Iframe, atom.Audio,
+		atom.Video, atom.Canvas, atom.Meter, atom.Progress, atom.Math:
+		return true
+	}
+	return false
+}
 func isSpecialContentElement(n *html.Node) bool {
 	if n != nil {
 		switch n.DataAtom {
@@ -71,6 +85,10 @@ func isEmptyTextNode(n *html.Node) bool {
 }
 
 func collapseWhitespace(in string) string {
+	if in == "" {
+		return ""
+	}
+
 	leading := unicode.IsSpace(getFirstRune(in))
 	trailing := unicode.IsSpace(getLastRune(in))
 
@@ -144,17 +162,18 @@ func printNode(w io.Writer, n *html.Node, pre bool, level int) (err error) {
 				if _, err = fmt.Fprint(w, collapseWhitespace(s)); err != nil {
 					return
 				}
-				if !hasSingleTextChild(n.Parent) &&
-					(n.NextSibling == nil || !unicode.IsPunct(getLastRune(strings.TrimSpace(s)))) {
-					if _, err = fmt.Fprint(w, "\n"); err != nil {
-						return
+				if !hasSingleTextChild(n.Parent) {
+					if unicode.IsSpace(getLastRune(n.Data)) || n.NextSibling == nil || (n.NextSibling.Type == html.ElementNode && !isInlineElement(n.NextSibling)) {
+						if _, err = fmt.Fprint(w, "\n"); err != nil {
+							return
+						}
 					}
 				}
 			}
 		}
 	case html.ElementNode:
 		if n.PrevSibling == nil ||
-			(n.PrevSibling.Type != html.TextNode || !unicode.IsPunct(getLastRune(strings.TrimSpace(n.PrevSibling.Data)))) {
+			(n.PrevSibling.Type != html.TextNode || unicode.IsSpace(getLastRune(n.PrevSibling.Data))) {
 			if err = printIndent(w, level); err != nil {
 				return
 			}
@@ -190,7 +209,7 @@ func printNode(w io.Writer, n *html.Node, pre bool, level int) (err error) {
 			}
 
 			if n.NextSibling == nil ||
-				(!unicode.IsPunct(getFirstRune(n.NextSibling.Data)) || n.NextSibling.Type == html.ElementNode) {
+				(n.NextSibling.Type == html.TextNode && !unicode.IsPunct(getFirstRune(n.NextSibling.Data))) {
 				if _, err = fmt.Fprint(w, "\n"); err != nil {
 					return
 				}

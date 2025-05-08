@@ -86,6 +86,15 @@ body {
 `,
 		},
 		{
+			name:  "space after text node with punctuation is preserved",
+			input: `<p><a href="https://example.com">Link</a>. <a href="https://example.org">Another</a></p>`,
+			expected: `<p>
+ <a href="https://example.com">Link</a>.
+ <a href="https://example.org">Another</a>
+</p>
+`,
+		},
+		{
 			name:  "spaces are not added around elements ending with punctuation",
 			input: "<div><time>19:00</time>–<time>20:00</time></div>",
 			expected: `<div>
