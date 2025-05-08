@@ -177,7 +177,7 @@ func printNode(w io.Writer, n *html.Node, pre bool, level int) (err error) {
 			}
 		}
 		if !isVoidElement(n) {
-			if err = printChildren(w, n, isPreFormatted(n.Data), level+1); err != nil {
+			if err = printChildren(w, n, n.Data == "pre", level+1); err != nil {
 				return
 			}
 			if isSpecialContentElement(n) || !hasSingleTextChild(n) {
@@ -212,10 +212,6 @@ func printNode(w io.Writer, n *html.Node, pre bool, level int) (err error) {
 		}
 	}
 	return
-}
-
-func isPreFormatted(s string) bool {
-	return s == "pre" || s == "script" || s == "style"
 }
 
 func printChildren(w io.Writer, n *html.Node, pre bool, level int) (err error) {

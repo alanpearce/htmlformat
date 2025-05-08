@@ -53,12 +53,12 @@ func TestFormat(t *testing.T) {
 			expected: `test 123` + "\n",
 		},
 		{
-			name: "script tags are not formatted",
+			name: "script tags are only indented",
 			input: `<script>
 	var x = 1;
 </script>`,
 			expected: `<script>
-	var x = 1;
+  var x = 1;
 </script>` + "\n",
 		},
 		{
