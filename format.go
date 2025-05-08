@@ -70,6 +70,23 @@ func isEmptyTextNode(n *html.Node) bool {
 	return n.Type == html.TextNode && strings.TrimSpace(n.Data) == ""
 }
 
+func collapseWhitespace(in string) string {
+	leading := unicode.IsSpace(getFirstRune(in))
+	trailing := unicode.IsSpace(getLastRune(in))
+
+	out := strings.TrimSpace(in)
+	switch {
+	case leading && trailing:
+		return " " + out + " "
+	case leading:
+		return " " + out
+	case trailing:
+		return out + " "
+	default:
+		return out
+	}
+}
+
 func getFirstRune(s string) rune {
 	r, _ := utf8.DecodeRuneInString(s)
 	return r
@@ -124,7 +141,7 @@ func printNode(w io.Writer, n *html.Node, pre bool, level int) (err error) {
 					return
 				}
 			} else {
-				if _, err = fmt.Fprint(w, s); err != nil {
+				if _, err = fmt.Fprint(w, collapseWhitespace(s)); err != nil {
 					return
 				}
 				if !hasSingleTextChild(n.Parent) &&
